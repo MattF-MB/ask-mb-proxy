@@ -54,7 +54,6 @@
 
 <script>
 const PROXY_URL = '/api/search';
-
 let loading = false;
 
 function addMessage(role, text) {
@@ -107,14 +106,10 @@ async function send() {
       ? hits.map(h => `[${h.fields?.filename || 'document'}]:\n${h.fields?.text || ''}`).join('\n\n---\n\n')
       : 'No relevant documents found.';
 
-const claudeRes = await fetch(PROXY_URL, {
+    const claudeRes = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'claude',
-        question: q,
-        context: context,
-      }),
+      body: JSON.stringify({ type: 'claude', question: q, context: context }),
     });
     const claudeData = await claudeRes.json();
     hideTyping();
