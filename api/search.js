@@ -2,24 +2,26 @@ const https = require('https');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS, GET');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('Access-Control-Max-Age', '86400');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  if (req.method === 'OPTIONS' || req.method === 'GET') {
+    return res.status(200).json({ status: 'ok' });
   }
 
   try {
-    const { query } = req.body;
+    const body = req.body;
+    const query = body?.query || '';
     const host = process.env.PINECONE_HOST.replace('https://', '');
-    
-    const body = JSON.stringify({
+
+    const payload = JSON.stringify({
       query: { inputs: { text: query }, top_k: 5 },
       fields: ['text', 'filename'],
     });
 
     const response = await new Promise((resolve, reject) => {
-      const reqOptions = {
+      const options = {
         hostname: host,
         path: '/records/namespaces/ask-mb/search',
         method: 'POST',
@@ -27,18 +29,21 @@ module.exports = async function handler(req, res) {
           'Api-Key': process.env.PINECONE_API_KEY,
           'Content-Type': 'application/json',
           'X-Pinecone-API-Version': '2025-04',
-          'Content-Length': Buffer.byteLength(body),
+          'Content-Length': Buffer.byteLength(payload),
         },
       };
 
-      const request = https.request(reqOptions, (r) => {
+      const r = https.request(options, (resp) => {
         let data = '';
-        r.on('data', chunk => data += chunk);
-        r.on('end', () => resolve(JSON.parse(data)));
+        resp.on('data', chunk => data += chunk);
+        resp.on('end', () => {
+          try { resolve(JSON.parse(data)); }
+          catch(e) { reject(new Error('Parse error: ' + data)); }
+        });
       });
-      request.on('error', reject);
-      request.write(body);
-      request.end();
+      r.on('error', reject);
+      r.write(payload);
+      r.end();
     });
 
     return res.status(200).json(response);
