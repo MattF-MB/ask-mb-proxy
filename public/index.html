@@ -108,14 +108,13 @@ async function send() {
       ? hits.map(h => `[${h.fields?.filename || 'document'}]:\n${h.fields?.text || ''}`).join('\n\n---\n\n')
       : 'No relevant documents found.';
 
-    const claudeRes = await fetch(ANTHROPIC_URL, {
+const claudeRes = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: `You are Ask MB, a helpful internal AI assistant for Magical Beginnings, an early childhood education company. Answer the employee's question using ONLY the document excerpts provided. Be clear, helpful, and concise. If the answer is not in the excerpts, say so and suggest contacting HR or their manager.`,
-        messages: [{ role: 'user', content: `Question: ${q}\n\nRelevant excerpts:\n\n${context}` }],
+        type: 'claude',
+        question: q,
+        context: context,
       }),
     });
     const claudeData = await claudeRes.json();
