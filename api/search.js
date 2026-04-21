@@ -44,7 +44,7 @@ module.exports = async function handler(req, res) {
       const response = await makePOST('api.anthropic.com', '/v1/messages',
         { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
         {
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 1000,
           system: `You are Ask MB, a helpful internal AI assistant for Magical Beginnings, an early childhood education company. Answer the employee's question using ONLY the document excerpts provided. Be clear, helpful, and concise. If the answer is not in the excerpts, say so and suggest contacting HR or their manager.`,
           messages: [{ role: 'user', content: `Question: ${question}\n\nRelevant excerpts:\n\n${context}` }],
